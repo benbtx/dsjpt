@@ -9,7 +9,7 @@ let request = axios.create({ baseURL: 'http://192.168.7.233:8082/' });
 
 
 // axios 配置
-request.defaults.timeout = 5000;
+request.defaults.timeout = 50000;
 // axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded;charset=UTF-8';
 //axios.defaults.baseURL = 'http://localhost:8008';
 // axios.defaults.baseURL = 'http://192.168.7.233:8081/';
@@ -143,10 +143,25 @@ http_tjs = {
         data: data.graphVo,
     }),
 
+    //边的类型
+    getAllRelationType: data => request({
+    method: "POST",
+    url: '/relationType/getAllRelationType',
+  }),
 
+    //权重最短路径
+    getShortPath: data => request({
+    method: "POST",
+    url: '/person/shortestPathForPath',
+    params: {start:data.start,end:data.end,relationType:data.relationType},
+    data:data.graphVo
+  }),
 
-
-
-
-
+    //最短路径
+    getShortPath1: data => request({
+    method: "POST",
+    url: '/person/shortestPathForNode',
+    params: {start:data.start,end:data.end,relationType:data.relationType},
+    data:data.graphVo
+  }),
 }

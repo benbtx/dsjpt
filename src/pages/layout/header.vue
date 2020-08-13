@@ -1,7 +1,9 @@
 <template>
   <header class="main-header animated" :class="{closeLogo:sidebar.collapsed,mobileLogo:device.isMobile}">
     <a href="#" class="logo">
-      <span class="logo-lg"><i class="fa fa-diamond"></i>&nbsp; <b>大数据管理系统</b></span>
+      <span class="logo-lg">
+        <!-- <i class="fa fa-diamond"></i>&nbsp;  -->
+      <b>九洲大数据管理系统</b></span>
     </a>
     <nav class="navbar">
       <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button"
@@ -9,7 +11,7 @@
         <span class="sr-only">Toggle navigation</span>
       </a>
       <div class="navbar-custom-menu">
-        <el-dropdown class="navbar-dropdown" trigger="click">
+        <!-- <el-dropdown class="navbar-dropdown" trigger="click">
           <div class="el-dropdown-link" style="height: auto;line-height: inherit">
             <el-badge :value="count" class="item">
             <i class="fa fa-envelope-o"></i>
@@ -17,14 +19,15 @@
           </div>
           <el-dropdown-menu>
             <ul class="message-list">
-            <li v-for="(item,index) in list"><!-- start message -->
+            <li v-for="(item,index) in list">
             <router-link :to="{path:'/sys/message',query:{id:item.id}}">
             <p>{{index + 1}}. {{item.title}}</p>
             </router-link>
             </li>
             </ul>
           </el-dropdown-menu>
-        </el-dropdown>
+        </el-dropdown> -->
+
         <el-dropdown trigger="click" class="navbar-dropdown">
           <div class="el-dropdown-link">
             <img :src='userInfo.avatar' style="width: 25px;height: 25px;border-radius: 50%; vertical-align: middle;" alt="U">

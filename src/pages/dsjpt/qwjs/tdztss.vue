@@ -8,18 +8,48 @@
             <el-button type="primary" icon="plus">新增</el-button>
           </router-link>
         </el-col> -->
-        <el-col :span="8">
-          主题：
-            <el-select v-model="zt" placeholder="请选择">
-              <el-option
-                v-for="item in ztlist"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value">
-              </el-option>
-            </el-select>
+
+          <el-col :span="6" :offset="0" :xs="12" :sm="12" :md="8" :lg="6" :xl="6">
+
+            <div class="el-input" style=" float: right;">
+                案件
+
+                <el-select
+                  size='350'
+                  v-model="archiveNum"
+                  filterable
+                  remote
+                  reserve-keyword
+                  placeholder="请输入关键词"
+                  :remote-method="remoteMethod"
+                  :loading="loading">
+                  <el-option
+                    v-for="item in options"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value">
+                  </el-option>
+                </el-select>
+
+            </div>
+            
+          </el-col>
+
+
+        <el-col :span="6" :xs="12" :sm="12" :md="8" :lg="6" :xl="6">
+            <div class="el-input" style=" float: right;">
+              主题
+              <el-select v-model="zt" placeholder="请选择">
+                <el-option
+                  v-for="item in ztlist"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value">
+                </el-option>
+              </el-select>
+            </div>
         </el-col>
-         <el-col :span="10" :offset="0">
+         <el-col :span="2" :xs="8" :sm="6" :md="2" :lg="2" :xl="2">
            
           <div class="el-input" style=" float: right;">
              
@@ -41,8 +71,9 @@
                    class="el-input__inner" style="width:180px">
           </div>
         </el-col> -->
-        <el-col :span="6">
-            <el-button type="primary" icon="plus" @click="search">搜索</el-button>
+        <el-col :span="6" :xs="6" :sm="6" :md="6" :lg="6" :xl="6">
+
+            <el-button type="primary" style=" float: right;" icon="plus" @click="btnGetSS">搜索</el-button>
 
          
 
@@ -133,6 +164,7 @@
   import * as sysApi from '../../../services/sys'
 
   import http_qwjs from "../../../common/http_qwjs"
+  import http_da from "../../../common/http_da";
 
 
   export default {
@@ -141,6 +173,11 @@
     },
     data(){
       return {
+           archiveNum: [],
+             options: [],
+               list: [],
+        loading: false,
+
         yw:'',
         jg:'',
         searchKey:'测试',
@@ -194,13 +231,70 @@
     },
 
     methods: {
+
+       remoteMethod(query) {
+        if (query !== '') {
+          this.loading = true;
+          setTimeout(() => {
+            this.loading = false;
+            this.options = this.list.filter(item => {
+              return item.label.toLowerCase()
+                .indexOf(query.toLowerCase()) > -1;
+            });
+          }, 200);
+        } else {
+          this.options = [];
+        }
+      },
+
+      // getDA 获取所有案件信息
+      getDA(){
+        return http_da
+          .getDAXX({})
+          .then(res => res)
+          .then(data => {
+              if(data.data.code==200)
+              {
+                // this.$message('操作成功');
+                // this.yw=data.data.data._result.rudangshici[0].content 
+                //生成option
+                for (const item of data.data.data) {
+                   this.list.push({
+                     value:item.num,
+                     label:item.name,
+                   });
+                }
+                // this.list =  data.data.data.map(item => {
+                //   return { value: `value:${item.num}`, label: `label:${item.name}` };
+                // });
+                
+            
+              }else{
+                 this.$message(data.data.msg);
+              }
+          })
+
+
+      },
+     
+      btnGetSS(){
+       
+      //  this.ispb=target;
+       this.ssjglist=[];
+       this.page=1;
+       this.total=0;
+
+       this.search();
+
+      },
+
     
       search(){
           var _this=this;
         //  if(this.searchKey==''){ this.$message('请输入搜索内容'); return;}
 
          return http_qwjs
-          .getTDZTSS({topic:this.zt,value:this.searchKey,page:this.page,size:this.size,highLight:true,fuzzySearch:true,redAndWhiteLisFilter:true})
+          .getTDZTSS({caseNumList:this.archiveNum,topic:this.zt,value:this.searchKey,page:this.page,size:this.size,highLight:true,fuzzySearch:true,redAndWhiteLisFilter:true})
           .then(res => res)
           .then(data => {
               if(data.data.code==200)
@@ -275,6 +369,7 @@
     },
     created(){
       // this.loadData();
+        this.getDA();
     }
   }
 </script>

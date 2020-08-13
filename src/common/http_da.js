@@ -5,7 +5,7 @@ import { getBaseUrl } from "../common/utils";
 import { MessageBox } from "element-ui";
 
 
-let request = axios.create({ baseURL: 'http://192.168.7.233:8081/' });
+let request = axios.create({ baseURL: 'http://192.168.7.233:8089/' });
 
 
 // axios 配置
@@ -14,6 +14,7 @@ request.defaults.timeout = 5000;
 //axios.defaults.baseURL = 'http://localhost:8008';
 // axios.defaults.baseURL = 'http://192.168.7.233:8081/';
 // request.defaults.headers.post['Content-Type'] = 'application/json';
+request.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
 
 // axios.defaults.baseURL = getBaseUrl(window.location.href);
 request.defaults.headers.common['authUid'] = auth.getUid();
@@ -113,6 +114,31 @@ http_da = {
 
         params: data,
     }),
+
+    getSAXX: data => request({
+        url: '/involved/queryInvolvedByArchivesNum',
+        method: 'post',
+        params: data,
+        // showload: true
+
+    }),
+
+    // POST /mailNonWorkTime/queryDetail 通过 档案编号、涉案人邮箱、联系人邮箱 查询邮件明细
+    getmailNonWorkTimeMX: data => request({
+        url: '/mailNonWorkTime/queryDetail',
+        method: 'post',
+        params: data,
+        // showload: true
+    }),
+    //POST /mailNonWorkTime/queryStatistics 通过 档案编号、身份证号码、往来邮件次数 查询图
+    //POST /mailNonWorkTime/queryStatistics通过 档案编号、身份证号码、往来邮件次数 查询图
+    getmailNonWorkTimeTXX: data => request({
+        url: '/mailNonWorkTime/queryStatistics',
+        method: 'post',
+        data,
+        // showload: true
+    }),
+
 
 
 

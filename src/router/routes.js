@@ -20,6 +20,8 @@ import ljfx from "../pages/dsjpt/tjs/ljfx.vue";
 import gld from "../pages/dsjpt/tjs/gld.vue";
 import gxtp from "../pages/dsjpt/tjs/gxtp.vue";
 import ztqj from "../pages/dsjpt/tjs/ztqj.vue";
+import twoWayMapping from "@/pages/dsjpt/tjs/twoWayMapping.vue"
+import graphEdit from "@/pages/dsjpt/tjs/graphEdit.vue"
 
 
 
@@ -52,9 +54,43 @@ import tdztss from "../pages/dsjpt/qwjs/tdztss.vue";
 
 
 
+
+
 import hmd from "../pages/sjwhgl/hmd.vue";
 import hmdAdd from "../pages/sjwhgl/hmdAdd.vue";
 import bmd from "../pages/sjwhgl/bmd.vue";
+
+import sjygl from "../pages/sjwhgl/sjygl.vue";
+import sjyglUpdate from "../pages/sjwhgl/sjyglUpdate.vue";
+import dsjbz from "../pages/sjwhgl/dsjbz.vue";
+
+
+//邮件分析相关
+import mgcfx from "../pages/ztfx/yjfx/mgcfx.vue";
+import xqfx from "../pages/ztfx/yjfx/xqfx.vue";
+import fgzsdyjfx from "../pages/ztfx/yjfx/fgzsdyjfx.vue";
+import mailExchangeAnalysis from "@/pages/ztfx/yjfx/mailExchangeAnalysis.vue"
+import mailObjectAnalysis from "@/pages/ztfx/yjfx/mailObjectAnalysis.vue"
+
+//多维度关系分析
+
+import dwdgxfx from "../pages/ztfx/dwdgxfx.vue";
+
+
+//算法库
+import gzlgl from "../pages/sfk/gzlgl.vue";
+import mxsj from "../pages/sfk/mxsj.vue";
+
+
+
+
+
+
+
+
+
+
+
 // Routes
 const routes = [
     { path: '/login', component: login },
@@ -91,6 +127,8 @@ const routes = [
             { path: '/dsjpt/tjs/ljfx', component: ljfx },
             { path: '/dsjpt/tjs/gld', component: gld },
             { path: '/dsjpt/tjs/gxtp', component: gxtp },
+            { path: '/dsjpt/tjs/twoWayMapping', component: twoWayMapping },
+            { path: '/dsjpt/tjs/graphEdit', component: graphEdit },
 
 
 
@@ -123,15 +161,44 @@ const routes = [
 
 
 
-            { path: '/sjcjgl', component: hmd },
+            { path: '/sjcjgl', component: NotFoundView },
 
             { path: '/sjwhgl/hmd', component: hmd },
             { path: '/sjwhgl/hmdAdd', component: hmdAdd },
             { path: '/sjwhgl/bmd', component: bmd },
             { path: '/sjwhgl/userAdd', component: userAdd },
 
+            { path: '/sjwhgl/sjygl', component: sjygl },
+            { path: '/sjwhgl/sjyglUpdate', component: sjyglUpdate },
 
+            { path: '/sjwhgl/dsjbz', component: dsjbz },
+
+
+
+            { path: '/ztfx', component: NotFoundView },
+            { path: '/ztfx/yjfx', component: NotFoundView },
+            { path: '/ztfx/yjfx/mgcfx', component: mgcfx },
+            { path: '/ztfx/yjfx/fgzsdyjfx', component: fgzsdyjfx },
+            { path: '/ztfx/yjfx/xqfx', component: xqfx },
+            { path: '/ztfx/yjfx/mailExchangeAnalysis', component: mailExchangeAnalysis },
+            { path: '/ztfx/yjfx/mailObjectAnalysis', component: mailObjectAnalysis },
+
+            { path: '/ztfx/dwdgxfx', component: dwdgxfx },
+
+
+            { path: '/sfk', component: NotFoundView },
+            { path: '/sfk/gzlgl', component: gzlgl },
+            { path: '/sfk/mxsj', component: mxsj },
+
+
+
+
+
+
+
+            { path: '/sjtjfx', component: NotFoundView },
             { path: '/sjtjfx/resource', component: sysUser },
+
 
         ]
     },

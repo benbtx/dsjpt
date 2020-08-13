@@ -15,7 +15,34 @@
                    class="el-input__inner">
           </div>
         </el-col> -->
-         <el-col :span="5" :offset="0">
+          <el-col  class="elcol"  :span="6" :offset="0" :xs="24" :sm="12" :md="9" :lg="8" :xl="6">
+
+            <div class="el-input" style=" float: right;">
+                案件
+
+                <el-select
+                  size='350'
+                  v-model="archiveNum"
+                  filterable
+                  remote
+                  reserve-keyword
+                  placeholder="请输入关键词"
+                  :remote-method="remoteMethod"
+                  :loading="loading">
+                  <el-option
+                    v-for="item in options"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value">
+                  </el-option>
+                </el-select>
+
+            </div>
+            
+          </el-col>
+
+
+         <el-col class="elcol" :span="5" :offset="0" :xs="24" :sm="12" :md="5" :lg="5" :xl="5">
           <div class="el-input" style=" float: right;">
              
             <input type="text" placeholder="关键字：" v-model="searchKey" @keyup.enter="btnGetSS()"
@@ -36,12 +63,12 @@
                    class="el-input__inner" style="width:180px">
           </div>
         </el-col> -->
-        <el-col :span="5">
+        <el-col class="elcol" :span="5" :xs="8" :sm="12" :md="12" :lg="5" :xl="5">
             <el-button type="primary" icon="plus" @click="btnGetSS(true)">搜索(屏蔽)</el-button>
 
         </el-col>
 
-        <el-col :span="5">
+        <el-col class="elcol" :span="5" :xs="8" :sm="12" :md="12" :lg="5" :xl="5">
             <el-button type="primary" icon="plus" @click="btnGetSS(false)">搜索(未屏蔽)</el-button>
 
         </el-col>
@@ -132,6 +159,8 @@
 
   import http_qwjs from "../../../common/http_qwjs"
 
+  import http_da from "../../../common/http_da";
+
 
   export default {
     components: {
@@ -139,6 +168,10 @@
     },
     data(){
       return {
+           archiveNum: [],
+             options: [],
+               list: [],
+                 loading: false,
         yw:'',
         jg:'',
         searchKey:'测试',
@@ -164,6 +197,52 @@
       }
     },
     methods: {
+
+      remoteMethod(query) {
+        if (query !== '') {
+          this.loading = true;
+          setTimeout(() => {
+            this.loading = false;
+            this.options = this.list.filter(item => {
+              return item.label.toLowerCase()
+                .indexOf(query.toLowerCase()) > -1;
+            });
+          }, 200);
+        } else {
+          this.options = [];
+        }
+      },
+
+      // getDA 获取所有案件信息
+      getDA(){
+        return http_da
+          .getDAXX({})
+          .then(res => res)
+          .then(data => {
+              if(data.data.code==200)
+              {
+                // this.$message('操作成功');
+                // this.yw=data.data.data._result.rudangshici[0].content 
+                //生成option
+                for (const item of data.data.data) {
+                   this.list.push({
+                     value:item.num,
+                     label:item.name,
+                   });
+                }
+                // this.list =  data.data.data.map(item => {
+                //   return { value: `value:${item.num}`, label: `label:${item.name}` };
+                // });
+                
+            
+              }else{
+                 this.$message(data.data.msg);
+              }
+          })
+
+
+      },
+
     
       btnGetSS(target){
         if(target==undefined){
@@ -182,7 +261,7 @@
       search(){
          var _this=this;
          return http_qwjs
-          .getSSXXPB({value:this.searchKey,page:this.page,size:this.size,highLight:true,redandwhiteListFilter:this.ispb})
+          .getSSXXPB({caseNumList:this.archiveNum,value:this.searchKey,page:this.page,size:this.size,highLight:true,redandwhiteListFilter:this.ispb})
           .then(res => res)
           .then(data => {
               if(data.data.code==200)
@@ -263,6 +342,7 @@
     },
     created(){
       // this.loadData();
+        this.getDA();
     }
   }
 </script>
@@ -281,5 +361,8 @@
    max-height: 350px;
    min-height: 200px;
    overflow-y: scroll;
+  }
+  .elcol{
+    margin-bottom: 5px;
   }
 </style>

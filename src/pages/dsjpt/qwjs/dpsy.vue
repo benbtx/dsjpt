@@ -3,7 +3,7 @@
   <imp-panel>
     <h3 class="box-title" slot="header" style="width: 100%;">
       <el-row style="width: 100%;">
-        <el-col :span="10" :offset="0">
+        <el-col :span="10" :offset="0" :xs="12" :sm="12" :md="10" :lg="10" :xl="10">
           <div class="el-input" style=" float: right;">
              单词：
             <input type="text" placeholder="单词：" v-model="searchKey" @keyup.enter="search($event)"
@@ -18,7 +18,7 @@
           </div>
         </el-col> -->
       
-        <el-col :span="14">
+        <el-col :span="14"  :xs="12" :sm="12" :md="14" :lg="14" :xl="14">
             <!-- <el-button type="primary" icon="plus" @click="search">数据索引</el-button> -->
               <el-button type="primary" icon="plus" @click="search">搜索</el-button>
          
@@ -140,6 +140,8 @@
     },
     data(){
       return {
+        nr:'',
+
         searchKey: '',
         currentRow: {},
         dialogVisible: false,
@@ -292,7 +294,13 @@
             
 
           
-      }
+      },
+
+      handleClose(done) {
+        this.dialogVisible=false;
+      
+      },
+
     },
     created(){
       this.loadData();

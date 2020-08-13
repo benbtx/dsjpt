@@ -159,6 +159,7 @@
 
       drawbar(id) {
         let o = document.getElementById(id);
+        if(o==null) return;
         let height = document.documentElement.clientHeight;
         height -= 120;
         o.style.height= height+"px";

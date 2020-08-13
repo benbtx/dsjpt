@@ -3,7 +3,7 @@ import qs from "qs";
 import auth from "./auth";
 import { getBaseUrl } from "../common/utils";
 import { MessageBox } from "element-ui";
-import interceptor from './interceptor'
+import interceptor from './interceptor';
 
 // // axios 配置
 // axios.defaults.timeout = 5000;
@@ -16,9 +16,15 @@ import interceptor from './interceptor'
 // axios.defaults.headers.common['authSid'] = auth.getSid();
 
 // let request = axios.create({ baseURL: 'http://192.168.7.182:8089/' });
-let request = axios.create({ baseURL: 'http://192.168.7.239:8089/' });
+// console.log(Vue.prototype.ApiUrl);
+// let request = axios.create({ baseURL: 'http://192.168.7.239:8089/' });
 
-let request_data = axios.create({ baseURL: 'http://192.168.7.239:8089/' });
+// let request_data = axios.create({ baseURL: 'http://192.168.7.239:8089/' });
+
+
+let request = axios.create({ baseURL: apiURL });
+
+let request_data = axios.create({ baseURL: apiURL });
 
 
 
@@ -40,37 +46,37 @@ interceptor(request);
 
 
 
-//POST传参序列化
-request.interceptors.request.use((config) => {
-    if (config.method === 'post') {
-        // config.data = qs.stringify(config.data);
-    }
-    // if(config.showload)  设置全局加载 loading 
-    //   {
-    //     showFullScreenLoading();
-    //   }
-    return config;
-}, (error) => {
-    return Promise.reject(error);
-});
+// //POST传参序列化
+// request.interceptors.request.use((config) => {
+//     if (config.method === 'post') {
+//         // config.data = qs.stringify(config.data);
+//     }
+//     // if(config.showload)  设置全局加载 loading 
+//     //   {
+//     //     showFullScreenLoading();
+//     //   }
+//     return config;
+// }, (error) => {
+//     return Promise.reject(error);
+// });
 
-//返回状态判断
-request.interceptors.response.use(
-    response => {
-        if (response.data && response.data.code) {
-            if (response.data.code === '2001') {
-                auth.logout()
-            }
-        }
-        return response;
-    },
-    error => {
-        if (error.response) {
-            //全局ajax错误信息提示
-            //MessageBox({type:"error",message:error.response.data,title:"温馨提示",});
-        }
-        //return Promise.reject(error);
-    });
+// //返回状态判断
+// request.interceptors.response.use(
+//     response => {
+//         if (response.data && response.data.code) {
+//             if (response.data.code === '2001') {
+//                 auth.logout()
+//             }
+//         }
+//         return response;
+//     },
+//     error => {
+//         if (error.response) {
+//             //全局ajax错误信息提示
+//             //MessageBox({type:"error",message:error.response.data,title:"温馨提示",});
+//         }
+//         //return Promise.reject(error);
+//     });
 
 
 
@@ -318,6 +324,7 @@ http_qwjs = {
         method: "GET",
         url: '/spider/spiderWithoutFormat',
         params: data,
+        showload: true
     }),
     ///file/download 下载文件doc/docx/xls/xlsx/html==>文件上传下载
     // getXZWJ: data => request({

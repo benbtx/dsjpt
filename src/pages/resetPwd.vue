@@ -30,6 +30,7 @@
     },
     methods: {
       onSubmit(){
+        this.$message('暂不支持修改密码！');return;
         if (this.newPwd !== this.newPwd2) {
           this.$message({type: "error", message: "两次输入密码不一致"});
           return;

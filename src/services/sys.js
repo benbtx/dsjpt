@@ -7,10 +7,14 @@ export function login(params) {
         axios.post(api.LOGIN, { params }).then(response => {
                 resolve(response.data);
             }, err => {
+                // resolve(defaultValue.login);
                 resolve(defaultValue.login);
+
             })
             .catch((error) => {
-                resolve(defaultValue.login)
+                // resolve(defaultValue.login)
+                resolve(defaultValue.login);
+
             })
     })
 }

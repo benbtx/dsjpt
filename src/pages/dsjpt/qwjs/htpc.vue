@@ -53,7 +53,18 @@
 
         
         <el-col :span="9"  :offset="0">
-            <el-button type="primary" icon="plus" @click="btnGetPQ">爬取</el-button>
+
+           <el-popover
+              placement="top-start"
+              title="提示"
+              width="200"
+              trigger="hover"
+              content="类型是网页，文件和网址都有值时，优先爬取文件">
+           <el-button  slot="reference" type="primary" icon="plus" @click="btnGetPQ">爬取</el-button>
+            </el-popover>
+
+
+          
 
             <el-button type="primary" style="margin-right:40px" icon="plus" @click="btnGetBC">保存</el-button>
             
@@ -259,6 +270,7 @@
           .then(res => res.data)
           .then(data => {
           //  alert(1)
+            _this.wjdatabase.push({value:'',label:''});
           
            for (const item of data.data) {
              _this.wjdatabase.push({value:item,label:item});
@@ -276,13 +288,15 @@
 
            if(this.lx=='html'&&this.wj==''&&this.wz==''){ this.$message('请选择文件或输入网址'); return;}
 
+           if(this.lx=='html'&&this.wj==''&&this.wz.indexOf('http')<0){ this.$message('输入网址请加上http://或https:// '); return;}
+
            return http_qwjs
               .getWJPQ({fileNameOrUrl:this.wj||this.wz})
               .then(res => res)
               .then(data => {
                   if(data.data.code==200)
                   {
-                    // this.$message(data.data.msg);
+                    this.$message(data.data.msg);
                     _this.pqjg=data.data.data
                     _this.form.content=data.data.data
                     

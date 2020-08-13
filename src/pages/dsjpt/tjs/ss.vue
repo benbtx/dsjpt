@@ -41,7 +41,7 @@
           <div class="el-input" style=" float: left;">
             <!-- width:200px -->
             人员选择：
-            <el-select  size='80' multiple  collapse-tags  v-model="ryxx" placeholder="请选择" @change="personChange">
+            <el-select  size='80' multiple  collapse-tags  v-model="ryxx" placeholder="请选择">
               <el-option
                 v-for="item in database"
                 :key="item.value"
@@ -87,8 +87,8 @@
         <kr-graph
           ref="graph"
           :graphData="graphData"
-          :maxClickNum="graphData.accountList.length"
-          @nodeClick="nodeClick"
+          :flowLine="flowLine"
+          v-loading="graphLoading"
         ></kr-graph>
       </el-card >
 
@@ -114,75 +114,11 @@
 
 <script>
   import panel from "../../../components/panel.vue";
-  import * as api from "../../../api";
-  import testData from "../../../../static/data/data.json";
-  import * as sysApi from '../../../services/sys';
-  import echarts from 'echarts';
-  import macarons from 'echarts/theme/dark';
   import http_da from "../../../common/http_da";
   import http_tjs from "../../../common/http_tjs"
+  import {cloneDeep} from "lodash"
 
 
-
-  let option= option = {
-    title: {
-      text: '',
-    },
-    legend: [{
-      // selectedMode: 'single',
-
-      // icon: 'circle'
-    }],
-    series: [{
-      type: 'graph',
-      layout: 'force',
-      symbolSize: 58,
-      draggable: true,
-      roam: true,
-      focusNodeAdjacency: false,
-      categories: [],
-      // edgeSymbol: ['', 'arrow'],
-      edgeSymbolSize: [80, 10],
-
-
-      edgeLabel: {
-        normal: {
-          show: true,
-          textStyle: {
-            fontSize: 15
-          },
-          formatter(x) {
-            // return x.data.name ;
-            return x.data.value ;
-
-          },
-          align: 'center',
-          position:'middle',
-          color:'red',
-          // padding:
-        },
-
-      },
-      label: {
-        normal: {
-          show: true,
-          textStyle: {
-            fontSize: 15
-          },
-          formatter(x) {
-            return x.data.name ;
-          },
-          color:'white'
-        },
-      },
-      force: {
-        repulsion: 2000,
-        edgeLength: 120
-      },
-      data:[],
-      links: []
-    }]
-  };
   export default {
     components: {
       'imp-panel': panel
@@ -201,6 +137,9 @@
           relateList,
           accountList:this.gxtData.persons
         }
+      },
+      flowLine(){
+        return this.gxtXRJD.map(value=>value.id)
       }
     },
     data(){
@@ -210,6 +149,7 @@
         archiveNum: [],
         list: [],
         loading: false,
+        graphLoading: false,
 
         nr:'',
 
@@ -337,7 +277,6 @@
       }
     },
     methods: {
-
       remoteMethod(query) {
         if (query !== '') {
           this.loading = true;
@@ -353,8 +292,6 @@
         }
       },
 
-      // change(){},
-
       // getDA 获取所有案件信息
       getDA(){
         return http_da
@@ -363,8 +300,6 @@
           .then(data => {
             if(data.data.code==200)
             {
-              // this.$message('操作成功');
-              // this.yw=data.data.data._result.rudangshici[0].content
               //生成option
               for (const item of data.data.data) {
                 this.list.push({
@@ -372,11 +307,6 @@
                   label:item.name,
                 });
               }
-              // this.list =  data.data.data.map(item => {
-              //   return { value: `value:${item.num}`, label: `label:${item.name}` };
-              // });
-
-
             }else{
               this.$message(res.data.msg);
             }
@@ -386,15 +316,16 @@
       },
       //根据案件查图信息
       getTXX(){
-
+        this.graphLoading=true
         return http_tjs
           .getDACTXX({archiveNum:this.archiveNum})
           .then(res => res)
           .then(data => {
+            this.graphLoading=false
             if(data.data.code==200)
             {
               // this.$message('操作成功');
-              this.graphVo=data.data.data;
+              this.graphVo=cloneDeep(data.data.data);
               this.gxtData=data.data.data;
               //更新人员信息
               this.database=[];
@@ -405,126 +336,17 @@
                 });
               }
 
-              this.drawchart('chart');
-              var that = this;
-              var resizeTimer = null;
-              window.onresize = function () {
-                if (resizeTimer) clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(function () {
-                  // that.drawchart('chart');
-                  that.chart.resize();
-
-                }, 1000);
-              }
-
-
-
-
-
             }else{
               this.$message(res.data.msg);
             }
-          }).catch(e => {  this.$message('接口操作失败');})
+          }).catch(e => {  this.graphLoading=false; this.$message('接口操作失败');})
 
 
       },
 
-      //过滤图
-      getTXXSS(){
-        //修改option ,修改 gxtData ,多次查询 option 不能保证每次都是初始值
-        //改变节点状态 ,当前单击选中高亮
-        // for (const item of option.series[0].data) {
-        //     if(item.data.twoWayMappingId==this.ryxx){
-        //       item.itemStyle.color='red'
-        //     }else{
-        //       item.itemStyle.color='#409EFF'
-        //     }
-
-        // }
-        if(this.archiveNum==[]){ this.$message('请先查询选择案件'); return;}
-        //  if(this.ryxx.toString()==''){ this.$message('请先选择人员'); return;}
-
-
-        this.twoWayMappingId=0;
-        let nodes=[];
-        for (const item of this.gxtData.persons) {
-          if(this.ryxx.toString()!=''){
-            if(this.ryxx.toString().indexOf(item.idCard)>-1){
-              nodes.push({
-                name: item.name,
-                label:{color :'white'},//10a050   3ff7d18   006acc
-                symbolSize: 120,//圆饼大小 节点大小
-                itemStyle: {
-                  color: '#409EFF', //#409EFF blue 节点的背景色
-                },
-                data:item,
-              });
-            }
-          }else{
-            nodes.push({
-              name: item.name,
-              label:{color :'white'},//10a050   3ff7d18   006acc
-              symbolSize: 120,//圆饼大小 节点大小
-              itemStyle: {
-                color: '#409EFF', //#409EFF blue 节点的背景色
-              },
-              data:item,
-            });
-
-          }
-
-        }
-        let links=[];
-        for (const item of this.gxtData.lists) {
-          if(this.ryxx.toString()!=''){
-            //过滤
-            if(this.ryxx.toString().indexOf(item.startPerson.idCard)>-1||this.ryxx.toString().indexOf(item.endPerson.idCard)>-1){
-              links.push({
-                source: item.startPerson.name,
-                target: item.endPerson.name,
-                value: item.value0,
-                lineStyle:{
-                  color: '#736d6d',  //#409EFF blue 连线的颜色
-                  width:2,
-                  opacity:1,
-
-                },
-                data:item,
-              });
-            }
-          }else{
-            //全部查询
-            links.push({
-              source: item.startPerson.name,
-              target: item.endPerson.name,
-              value: item.value0,
-              lineStyle:{
-                color: '#736d6d',  //#409EFF blue 连线的颜色
-                width:2,
-                opacity:1,
-
-              },
-              data:item,
-            });
-          }
-
-        }
-
-
-
-
-        option.series[0].data=nodes;
-        option.series[0].links=links;
-
-
-
-
-        this.chart.setOption(option);
-        this.chart.resize();
-      },
 
       getSearch(){
-        this.$refs.graph.searchNode()
+        this.$refs.graph.searchNode(this.ryxx)
       },
 
       nodeClick(nodes){
@@ -534,146 +356,30 @@
       personChange(){
         this.$refs.graph.changeClickNode(this.ryxx)
       },
-      drawchart(id) {
-        var _this=this;
-        let o = document.getElementById(id);
-        if(o==null){
-          return;
-        }
-        let height = document.documentElement.clientHeight;
-        height -= 120;
-        o.style.height= height+"px";
-        this.chart = echarts.init(o,'macarons');
-        // this.chart = echarts.init(o);
 
-
-        //重新构造option
-        let nodes=[];
-        for (const item of this.gxtData.persons) {
-          nodes.push({
-            name: item.name,
-            // symbolSize:50,
-            // itemStyle:{color :'black'},//10a050   3ff7d18   006acc
-            label:{color :'white'},//10a050   3ff7d18   006acc
-            symbolSize: 120,//圆饼大小 节点大小
-            itemStyle: {
-              color: '#409EFF', //#409EFF blue 节点的背景色
-            },
-            data:item,
-          });
-          // var node={
-          //       name: item.name,
-          //       // symbolSize:50,
-          //       // itemStyle:{color :'black'},//10a050   3ff7d18   006acc
-          //       label:{color :'white'},//10a050   3ff7d18   006acc
-          //       symbolSize: 80,
-          //       itemStyle: {
-          //           color: '#409EFF', //#409EFF blue 节点的背景色
-          //       },
-          //       data:item,
-          // };
-          // for (const i of  this.gxtXRJD) {
-          //    if(item.idCard==i.idCard){
-          //      node.itemStyle.color='red'
-          //    }
-          // }
-          //  nodes.push(node);
-
-        }
-
-        let links=[];
-        for (const item of this.gxtData.lists) {
-          links.push({
-            source: item.startPerson.name,
-            target: item.endPerson.name,
-            value: item.value0,
-            lineStyle:{
-              color: '#736d6d',  //#409EFF blue 连线的颜色
-              width:2,
-              opacity:1,
-
-            },
-            data:item,
-          });
-        }
-
-
-        option.series[0].data=nodes;
-        option.series[0].links=links;
-
-        this.chart.setOption(option);
-        this.chart.resize();
-
-        this.chart.off('click');
-        this.chart.on('click', function (params) {
-          console.log(params);
-          console.log(params.data.data);
-          _this.twoWayMappingId=params.data.data.twoWayMappingId;
-          if(_this.twoWayMappingId==0){
-            _this.$message('请选中一个点');
-            return;
-          }
-
-          //改变节点状态 ,当前单击选中高亮
-          for (const item of option.series[0].data) {
-            if(item.data.twoWayMappingId==params.data.data.twoWayMappingId){
-              item.itemStyle.color='Blue'
-            }else{
-              item.itemStyle.color='#409EFF'
-            }
-
-          }
-
-
-          _this.chart.setOption(option);
-
-        });
-
-
-      },
 
       //深度优先遍历 
       btnGetSDYX(){
         var _this=this;
         if(this.archiveNum==[]){ this.$message('请先查询选择案件'); return;}
-
-        if(this.graphVo==null||this.twoWayMappingId==0){ this.$message('请先选中某个节点'); return;}
+        if(this.graphVo==null||!this.$refs.graph.clickNodes.length){ this.$message('请先选中某个节点'); return;}
+        this.graphLoading=true
         http_tjs
-        // .getSDYX({graphVo:JSON.parse(JSON.stringify(this.graphVo)),twoWayMappingId:this.twoWayMappingId})
-        // .getSDYX({graphVo:JSON.stringify(JSON.parse(JSON.stringify(this.graphVo))),twoWayMappingId:this.twoWayMappingId})
-          .getSDYX({graphVo:this.graphVo,twoWayMappingId:this.twoWayMappingId})
-
+          .getSDYX({graphVo:this.graphVo,twoWayMappingId:this.$refs.graph.clickNodes[0].twoWayMappingId})
           .then(res => res)
           .then(data => {
+            this.graphLoading=false;
             if(data.data.code==200)
             {
-              // this.$message('操作成功');
               _this.gxtXRJD=data.data.data; //当前查询到需要渲染的节点
-              _this.dialogVisible=true;
               _this.nr='';
               for (const i of  _this.gxtXRJD) {
                 this.nr+="<span >"+i.name+"("+i.idCard+")</span><br/>"
               }
-
-              // //改变节点状态
-              //   for (const item of option.series[0].data) {
-              //     for (const i of  _this.gxtXRJD) {
-              //       if(item.data.idCard==i.idCard){
-              //         item.itemStyle.color='red'
-              //       }
-              //     }
-
-              //   }
-
-
-              // this.chart.setOption(option);
-
-
-
             }else{
               this.$message(res.data.msg);
             }
-          }).catch(e => {  this.$message('接口操作失败');})
+          }).catch(e => {  this.graphLoading=false; this.$message('接口操作失败');})
 
 
       },
@@ -681,54 +387,27 @@
       btnGetGDYX(){
         var _this=this;
         if(this.archiveNum==[]){ this.$message('请先查询选择案件'); return;}
-
-        if(this.graphVo==null||this.twoWayMappingId==0){ this.$message('请先选中某个节点'); return;}
+        if(this.graphVo==null||!this.$refs.graph.clickNodes.length){ this.$message('请先选中某个节点'); return;}
+        this.graphLoading=true
         http_tjs
-        // .getSDYX({graphVo:JSON.parse(JSON.stringify(this.graphVo)),twoWayMappingId:this.twoWayMappingId})
-        // .getSDYX({graphVo:JSON.stringify(JSON.parse(JSON.stringify(this.graphVo))),twoWayMappingId:this.twoWayMappingId})
-          .getGDYX({graphVo:this.graphVo,twoWayMappingId:this.twoWayMappingId})
-
+          .getGDYX({graphVo:this.graphVo,twoWayMappingId:this.$refs.graph.clickNodes[0].twoWayMappingId})
           .then(res => res)
           .then(data => {
+            this.graphLoading=false;
             if(data.data.code==200)
             {
-              // this.$message('操作成功');
               _this.gxtXRJD=data.data.data; //当前查询到需要渲染的节点
-              _this.dialogVisible=true;
               _this.nr='';
               for (const i of  _this.gxtXRJD) {
                 this.nr+="<span >"+i.name+"("+i.idCard+")</span><br/>"
               }
-              // //改变节点状态
-              //   for (const item of option.series[0].data) {
-              //     for (const i of  _this.gxtXRJD) {
-              //       if(item.data.idCard==i.idCard){
-              //         item.itemStyle.color='red'
-              //       }
-              //     }
-
-              //   }
-
-
-              // this.chart.setOption(option);
-
-
-
             }else{
               this.$message(res.data.msg);
             }
-          }).catch(e => {  this.$message('接口操作失败');})
+          }).catch(e => {  this.graphLoading=false; this.$message('接口操作失败');})
 
 
-      },
-
-
-
-
-
-
-
-
+      }
     },
     created(){
       this.getDA();

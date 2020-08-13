@@ -5,25 +5,13 @@
       <h3 class="box-title" slot="header" style="width: 100%;">
         <el-row style="width: 100%;">
           <el-col :span="14" :offset="0">
-            <!-- <div class="el-input" style=" float: right;">
-              姓名：
-              <input type="text" placeholder="输入用户名称" v-model="searchKey" @keyup.enter="search($event)"
-                    class="el-input__inner" style="width:150px">
-            </div> -->
+
             <div class="el-input" style=" float: right;">
                 案件
-                <!-- <el-select v-model="databasevalue" placeholder="请选择">
-                  <el-option
-                    v-for="item in database"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value">
-                  </el-option>
-                </el-select> -->
+
                 <el-select
                   size='350'
                   v-model="archiveNum"
-               
                   filterable
                   remote
                   reserve-keyword
@@ -45,9 +33,6 @@
           <el-col :span="10">
               <el-button type="primary" icon="plus" @click="getTXX">创建图</el-button>
 
-              <!-- <router-link :to="{ path: 'hmdAdd'}">
-                <el-button type="primary" icon="plus">更新</el-button>
-              </router-link> -->
             
               <el-button type="primary" icon="plus" @click="getTXX">更新图</el-button>
 
@@ -64,7 +49,7 @@
        
           <el-card class="box-card">
             
-             <kr-graph :graphData="graphData"></kr-graph>
+             <kr-graph :graphData="graphData" :maxClickNum="0" v-loading="graphLoading" ></kr-graph>
            </el-card >
 
           
@@ -91,11 +76,6 @@
                   <el-input type="textarea" v-model="form.remark"></el-input>
                 </el-form-item>
 
-               
-
-                <!-- <el-form-item>
-                  <el-button type="info" @click="onEditSubmit" v-if="form.id">保存</el-button>
-                </el-form-item> -->
             </el-form>
              
             <span slot="footer" class="dialog-footer">
@@ -129,78 +109,14 @@
 
 <script>
   import panel from "../../../components/panel.vue";
-  import * as api from "../../../api";
-  import testData from "../../../../static/data/data.json";
-  import * as sysApi from '../../../services/sys';
-  import echarts from 'echarts';
-  import macarons from 'echarts/theme/dark';
   import http_da from "../../../common/http_da";
   import http_tjs from "../../../common/http_tjs"
-  // import http_da from "../../../common/http_da"
-  import * as d3 from "d3";
+
+  import {cloneDeep} from "lodash"
 
 
   
 
-  let option= option = {
-      title: {
-          text: '',
-      },
-      legend: [{
-          // selectedMode: 'single',
-      
-          // icon: 'circle'
-      }],
-      series: [{
-          type: 'graph',
-          layout: 'force',
-          symbolSize: 58,
-          draggable: true,
-          roam: true,
-          focusNodeAdjacency: false,//关联节点高亮其他淡化true   
-          categories: [],
-          // edgeSymbol: ['', 'arrow'],
-          edgeSymbolSize: [80, 10],
-     
-
-          edgeLabel: {
-              normal: {
-                  show: true,
-                  textStyle: {
-                      fontSize: 15
-                  },
-                  formatter(x) {
-                      // return x.data.name ;
-                      return x.data.value ;
-
-                  },
-                  align: 'center',
-                  position:'middle',
-                  color:'red',
-                  // padding:
-              },
-             
-          },
-          label: {
-             normal: {
-                  show: true,
-                  textStyle: {
-                      fontSize: 15
-                  },
-                  formatter(x) {
-                      return x.data.name ;
-                  },
-                   color:'white'
-              },
-          },
-          force: {
-              repulsion: 2000,
-              edgeLength: 120
-          },
-          data:[],
-          links: []
-      }]
-  };
   export default {
     components: {
       'imp-panel': panel
@@ -230,6 +146,7 @@
         archiveNum: [],
         list: [],
         loading: false,
+        graphLoading: false,
         savedialogVisible:false,
         form: {
           id: null,
@@ -404,95 +321,24 @@
       //根据案件查图信息
       getTXX(){
            if(this.archiveNum==[]){ this.$message('请先查询选择案件'); return;}
+           this.graphLoading=true
           return http_tjs
           .getDACTXX({archiveNum:this.archiveNum})
           .then(res => res)
           .then(data => {
               if(data.data.code==200)
               {
-                // this.$message('操作成功');
-                     this.graphVo=data.data.data;
-                  this.gxtData=data.data.data;
-                  this.drawchart('chart');
-                  var that = this;
-                  var resizeTimer = null;
-                  window.onresize = function () {
-                    if (resizeTimer) clearTimeout(resizeTimer);
-                    resizeTimer = setTimeout(function () {
-                      that.drawchart('chart');
-                    }, 1000);
-                  }
-
-              
-            
+                this.graphVo=cloneDeep(data.data.data);
+                this.gxtData=data.data.data;
               }else{
                  this.$message(data.data.msg);
               }
-          }).catch(e => {  this.$message('接口操作失败');})
+            this.graphLoading=false;
+          }).catch(e => { this.graphLoading=false; this.$message('接口操作失败');})
 
 
       },
 
-      drawchart(id) {
-        let o = document.getElementById(id);
-        if(o==null){
-          return;
-        }
-        let height = document.documentElement.clientHeight;
-        height -= 120;
-        o.style.height= height+"px";
-        this.chart = echarts.init(o,'macarons');
-        // this.chart = echarts.init(o);
-
-
-        //重新构造option
-        let nodes=[];
-        for (const item of this.gxtData.persons) {
-          nodes.push({
-                name: item.name,
-                // symbolSize:50,
-                // itemStyle:{color :'black'},//10a050   3ff7d18   006acc
-                label:{color :'white'},//10a050   3ff7d18   006acc
-                symbolSize: 80,
-                itemStyle: {
-                    color: '#409EFF', //#409EFF blue 节点的背景色
-                },
-                data:item,
-          });
-        }
-       
-        let links=[];
-        for (const item of this.gxtData.lists) {
-          links.push({
-                source: item.startPerson.name,
-                target: item.endPerson.name,
-                value: item.value0,
-                lineStyle:{
-                    color: '#736d6d',  //#409EFF blue 连线的颜色
-                    width:2,
-                    opacity:1,
-
-                },
-                 data:item,
-            });
-        }
-        
-
-        option.series[0].data=nodes;
-        option.series[0].links=links;
-
-        this.chart.setOption(option);
-        this.chart.resize();
-       
-        this.chart.off('click');
-        this.chart.on('click', function (params) {
-           console.log(params);
-           console.log(params.data.data);
-
-        });
-
-
-      },
 
       onEditSubmit(){
       
@@ -542,10 +388,10 @@
                   this.nr+=item+"<br>"
                 }
 
-                
 
-              
-            
+
+
+
               }else{
                  this.$message(data.data.msg);
               }
@@ -565,10 +411,10 @@
                   for (const item of data.data.data.matrix) {
                   this.nr+=item+"<br>"
                 }
-                
 
-              
-            
+
+
+
               }else{
                  this.$message(data.data.msg);
               }

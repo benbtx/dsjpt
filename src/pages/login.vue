@@ -6,7 +6,7 @@
       <el-col :span="24" :xs="24" :sm="16" :md="16" :lg="16">
         <div class="login-form">
           <div class="card-block">
-            <h1>大数据管理系统</h1>
+            <h1>九洲大数据管理系统</h1>
             <p class="text-muted">任意用户名/密码登录</p>
             <div class="input-group m-b-1">
               <span class="input-group-addon"><i class="fa fa-user"></i></span>
@@ -57,8 +57,8 @@
     data() {
       return {
         form: {
-          username: '',
-          password: ''
+          username: 'admin',
+          password: 'admin'
         }
       }
     },
@@ -71,12 +71,29 @@
         loadMenuList: 'loadMenuList' // 映射 this.load() 为 this.$store.dispatch('loadMenuList')
       }),
       login(){
+        var _this=this;
         var redirectUrl = '/index';
         if (this.$route.query && this.$route.query != null && this.$route.query.redirect && this.$route.query.redirect != null) {
           redirectUrl = this.$route.query.redirect;
         }
         sysApi.login(this.form).then(res => {
-          this.loginSuccess({...res,redirectUrl})
+          //res login2 是数组
+          var jj=0;
+           for (var j = 0; j < res.length; j++) {
+                if((res[j].user.username==_this.form.username==true)&&(res[j].user.password==_this.form.password==true)){
+                  this.loginSuccess({...res[j],redirectUrl})
+                }else{
+                     jj=jj+1; 
+                }
+            }
+            if(jj==res.length){ _this.$message('用户或密码不正确！');}
+            
+          // if(res.user.username!=this.form.username&&res.user.password!=this.form.password){
+          //     this.$message('用户或密码不正确！');
+          //     return;
+          // } 
+
+          // this.loginSuccess({...res,redirectUrl})
         })
       },
       loginSuccess({sid,user,redirectUrl}){

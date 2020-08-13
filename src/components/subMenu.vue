@@ -1,23 +1,23 @@
 <template>
-  <el-submenu :index="item.href" v-if="item.children && item.children.length>0" class="el-menu-sub">
-    <template slot="title"><i :class="item.icon"></i><span>{{item.name}}</span></template>
-    <template v-for="child in item.children">
-      <sub-menu v-if="child.children && child.children.length>0" :param="child"></sub-menu>
-      <!-- <el-menu-item :index="child.href" v-else>
-        <i :class="child.icon"></i><span>{{child.name}}</span>
-      </el-menu-item> -->
+  <el-submenu :index="item.href" v-if="item.children && item.children.length>0" class="el-menu-sub" v-show="item.isShow">
+      <template slot="title" ><i :class="item.icon"></i><span>{{item.name}}</span></template>  
+      <template v-for="child in item.children" >
+        <sub-menu v-if="child.children && child.children.length>0" :param="child" v-show="item.isShow&&child.isShow"></sub-menu>
+        <!-- <el-menu-item :index="child.href" v-else>
+          <i :class="child.icon"></i><span>{{child.name}}</span>
+        </el-menu-item> -->
 
-      <div v-else>
-          <el-menu-item :index="child.href" v-if="child.href.indexOf('http')<0">
-            <i :class="child.icon"></i><span>{{child.name}}</span>
-          </el-menu-item>
-          <!-- :href="child.href"  target="_blank" -->
-          <a class='yyxt' v-else   href="javascript:void(0)" @click="js_method(child.href,child.isneedlogin,child.url)">   <i :class="child.icon" ></i><span>{{child.name}}</span></a>
-      </div>
+        <div v-else >
+            <el-menu-item :index="child.href" v-if="child.href.indexOf('http')<0" v-show="child.isShow">
+              <i :class="child.icon"></i><span>{{child.name}}</span>
+            </el-menu-item>
+            <!-- :href="child.href"  target="_blank" -->
+            <a class='yyxt' v-else   href="javascript:void(0)" @click="js_method(child.href,child.isneedlogin,child.url)" v-show="child.isShow">   <i :class="child.icon" ></i><span>{{child.name}}</span></a>
+        </div>
 
-    </template>
+      </template>
   </el-submenu>
-  <el-menu-item :index="item.href" v-else class="el-menu-each"><i :class="item.icon"></i><span>{{item.name}}</span></el-menu-item>
+  <el-menu-item :index="item.href" v-else class="el-menu-each" v-show="item.isShow"><i :class="item.icon"></i><span>{{item.name}}</span></el-menu-item>
   <!-- <div v-else class="el-menu-each">
      <el-menu-item :index="child.href" v-if="item.href.indexOf('wwww')!=-1">
         <i :class="child.icon"></i><span>{{child.name}}</span>

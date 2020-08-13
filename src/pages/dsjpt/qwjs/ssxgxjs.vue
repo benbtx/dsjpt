@@ -15,7 +15,7 @@
                    class="el-input__inner">
           </div>
         </el-col> -->
-         <el-col :span="10" :offset="0">
+        <el-col :span="10" :offset="0"  :xs="12" :sm="12" :md="10" :lg="10" :xl="10">
           <div class="el-input" style=" float: right;">
              关键字：
             <input type="text" placeholder="关键字：" v-model="searchKey" @keyup.enter="btnGetSS($event)"
@@ -36,7 +36,7 @@
                    class="el-input__inner" style="width:180px">
           </div>
         </el-col> -->
-        <el-col :span="14">
+        <el-col :span="14"  :xs="12" :sm="12" :md="14" :lg="14" :xl="14">
             <el-button type="primary" icon="plus" @click="btnGetSS()">搜索</el-button>
 
             <!-- <router-link :to="{ path: 'zdwhUpdate'}">

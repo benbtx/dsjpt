@@ -26,10 +26,42 @@
       maxClickNum:{
         type:Number,
         default:1
-      }
+      },
+      menus:{
+        type: Array,
+        default(){
+          return []
+        }
+      },
+      tipNodeLine:{
+        type: Object,
+        default(){
+          return {
+            accountList: [],
+            relateList: []
+          }
+        }
+      },
+      isHover:{
+        type: Boolean,
+        default:true
+      },
+      moreNodesToggle:{
+        type: Boolean,
+        default:false
+      },
     },
     computed: {
-
+      menuNav(){
+        var list=[]
+        this.menus.map(value => {
+          list.push({
+            event: value,
+            proportion: 1
+          })
+        })
+        return list
+      }
     },
     data() {
       const $shelf = this;
@@ -39,10 +71,6 @@
           accountList: [],
           relateList: []
         },
-        menuNav: [
-          { event: "添加关系", proportion: 1 },
-          { event: "隐藏", proportion: 1 }
-        ],
         width: "",
         height: "",
         initScale: 1,
@@ -210,8 +238,8 @@
           .style("cursor", "move")
           .style("pointer-events", "all")
           .on("click", () => {
-            if(!this.isZoomMove){
-              // this.clearStatus();
+            if((this.nodeClickToggle||this.moreNodesToggle)&&!this.isZoomMove){
+              this.clearStatus();
             }
           })
           .on("mousedown", () => {
@@ -381,7 +409,9 @@
             this.toggleLineText(this.lineText, currNode, false);
           })
           .on("mousedown", function(currNode) {
-            // shelf.menuEvent(d3.event, currNode, this);
+            if(shelf.menus.length){
+              shelf.menuEvent(d3.event, currNode, this);
+            }
           })
           .on("click", currNode => {
             if (this.isClick) {
@@ -700,11 +730,10 @@
 
       //节点hover时改变节点的opacity
       toggleNode(nodeCircle, currNode, isHover) {
+        if(!this.isHover){
+          return
+        }
         if (isHover) {
-          // 提升节点层级
-          // nodeCircle.sort((a, b) => (a.id === currNode.id ? 1 : -1));
-          // this.nodeData.sort((a, b) => (a.id === currNode.id ? 1 : -1));
-          // this.parentNode.appendChild(this);
           nodeCircle
             .style("opacity", 0.1)
             .filter(node => this.isLinkNode(currNode, node))
@@ -716,6 +745,9 @@
 
       //节点hover时改变线的opacity
       toggleLine(linkLine, currNode, isHover) {
+        if(!this.isHover){
+          return
+        }
         if (isHover) {
           // 加重连线样式
           linkLine
@@ -731,6 +763,9 @@
 
       //节点hover时改变线文字的opacity
       toggleLineText(lineText, currNode, isHover) {
+        if(!this.isHover){
+          return
+        }
         if (isHover) {
           // 只显示相连连线文字
           lineText.style(
@@ -745,6 +780,9 @@
 
       //线hover时改变线的opacity
       linkToggleLine(currNode, isHover) {
+        if(!this.isHover){
+          return
+        }
         if (isHover) {
           // 加重连线样式
           this.linkLine
@@ -769,6 +807,9 @@
 
       //线hover时改变节点的opacity
       linkToggleNode(currNode, isHover) {
+        if(!this.isHover){
+          return
+        }
         if (isHover) {
           this.nodeCircle
             .style("opacity", 0.1)
@@ -784,6 +825,9 @@
 
       //线hover时改变线文字的opacity
       linkToggleLineText(currNode, isHover) {
+        if(!this.isHover){
+          return
+        }
         if (isHover) {
           // 只显示相连连线文字
           this.lineText.style(
@@ -814,6 +858,38 @@
           this.toggleLine(this.linkLine, currNode, true);
           this.toggleLineText(this.lineText, currNode, true);
         }
+      },
+
+      nodesToggle(nodes){
+        if(nodes&&!nodes.length){
+          this.clearStatus()
+          return
+        }
+        this.nodeCircle
+          .style("opacity", 0.1)
+          .filter(node => {
+            var is=false
+            nodes.map(value=>{
+              if(value.id==node.id){
+                is=true
+              }
+              if(this.linkMap[value.id + "-" + node.id] ||
+                this.linkMap[node.id + "-" + value.id]){
+                is=true
+              }
+            })
+            return is
+          })
+          .style("opacity", 1);
+        this.linkLine
+          .style("opacity", 0.1)
+          .filter(link => nodes.findIndex(a=>a.id==link.source.id||a.id==link.target.id)!=-1)
+          .style("opacity", 1)
+          .classed("link-active", true);
+        this.lineText
+          .style("fill-opacity", "0.1")
+          .filter(link => nodes.findIndex(a=>a.id==link.source.id||a.id==link.target.id)!=-1)
+          .style("fill-opacity", "1.0")
       },
 
       //设置连线id
@@ -923,16 +999,24 @@
 
       //点击节点
       nodeClick(currNode) {
+        if(!this.maxClickNum){
+          return
+        }
         if(this.clickNodes.findIndex(a=>a.id==currNode.id)==-1){
           if(this.clickNodes.length<this.maxClickNum){
+            this.clickNodes.push(currNode)
           }else {
             this.clickNodes.splice(0,1)
+            this.clickNodes.push(currNode)
           }
-          this.clickNodes.push(currNode)
         }else {
           this.clickNodes.splice(this.clickNodes.findIndex(a=>a.id==currNode.id),1)
         }
         this.$emit("nodeClick",this.clickNodes)
+        if(this.clickNodes.length==2){
+          this.$emit("getPath",this.clickNodes)
+        }
+        this.clearLineStatus()
       },
 
       //清除状态
@@ -960,15 +1044,17 @@
           .attr("transform", "translate(" + node.x + "," + node.y + ")");
 
         this.floWchangeNode(0)
-        setInterval(()=>{
+        var timer=setInterval(()=>{
           if(index<this.flowLine.length){
             this.floWchangeNode(index)
             this.moveFlow(this.flowLine[index],this.flowLine[index+1])
             index=index+1
           }else {
-            this.moveFlow(this.flowLine[0])
-            index=0
-            this.floWchangeNode(index)
+            window.clearInterval(timer)
+            d3.select(".flow").remove()
+            this.nodeCircle
+              .select("circle")
+              .style("fill", this.nodeConf.fillColor);
           }
         },2000)
       },
@@ -978,14 +1064,13 @@
         let source=this.nodesMap[sourceId]
         let target=this.nodesMap[targetId]
         if(target){
-          var rotate=this.angle(source,target)+180
           d3.select(".flow")
             .attr("transform", )
           d3.select(".flow")
-            .attr("transform", "translate(" + source.x + "," + source.y + ")rotate("+rotate+")")
+            .attr("transform", "translate(" + source.x + "," + source.y + ")")
             .transition()
             .duration(2000)
-            .attr("transform", "translate(" + target.x + "," + target.y + ") rotate("+rotate+")");
+            .attr("transform", "translate(" + target.x + "," + target.y + ")");
         }else {
           d3.select(".flow")
             .attr("transform", "translate(" + source.x + "," + source.y + ")")
@@ -994,6 +1079,7 @@
 
       floWchangeNode(index){
         let node=this.nodesMap[this.flowLine[index]]
+        this.clickNodes=[]
         this.nodeCircle
           .select("circle")
           .style("fill", this.nodeConf.fillColor);
@@ -1013,29 +1099,36 @@
         this.nodeToggleClick()
       },
 
-      searchNode(){
-        if(this.clickNodes.length==0){
+      searchNode(nodes){
+        if(nodes.length==0){
           this.graphData.accountList.map(value=>{
             value.fixed=false
           })
           this.emptyData()
           this.createSvg(this.graphData);
         }else {
-          let accountList=this.clickNodes,relateList=[]
+          let accountList=[],relateList=[]
+          this.graphData.accountList.map(value=>{
+            if(nodes.findIndex(a=>a==value.id)!=-1){
+              accountList.push(value)
+            }
+          })
           accountList.map(value=>{
             value.fixed=false
           })
           this.graphData.relateList.map(value=>{
-            if(this.clickNodes.findIndex(a=>a.id==value.source)!=-1&&this.clickNodes.findIndex(a=>a.id==value.target)!=-1){
+            if(nodes.findIndex(a=>a==value.source)!=-1&&nodes.findIndex(a=>a==value.target)!=-1){
               relateList.push(value)
             }
           })
           this.emptyData()
           this.createSvg({accountList,relateList});
-          setTimeout(()=>{
-            this.nodeToggleClick()
-          })
         }
+      },
+
+      clearLineStatus(){
+        this.linkLine
+          .style("stroke",this.lineConf.strokeColor);
       }
     },
     watch: {
@@ -1046,10 +1139,31 @@
         });
         this.createSvg(this.graphData);
       },
-      flowWithLine(){
-        setTimeout(()=>{
-          this.flowWithLine()
-        })
+      flowLine(){
+        if(this.flowLine.length>0){
+          setTimeout(()=>{
+            this.flowWithLine()
+          })
+        }
+      },
+      tipNodeLine(){
+       this.nodeToggleClick()
+        this.nodeCircle
+          .filter(d => this.tipNodeLine.accountList.findIndex(a=>a.id==d.id)!=-1&&this.clickNodes.findIndex(a=>a.id==d.id)==-1)
+          .select("circle")
+          .style("fill", "red");
+       this.clearLineStatus()
+        this.linkLine
+          .filter(d => {
+            let is=false
+            this.tipNodeLine.relateList.map(value=>{
+              if((value.source==d.source.id&&value.target==d.target.id)||(value.source==d.target.id&&value.target==d.source.id)){
+                is=true
+              }
+            })
+            return is
+          })
+          .style("stroke","red");
       }
     },
     destroyed(){

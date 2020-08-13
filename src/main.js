@@ -11,7 +11,11 @@ import Element from "element-ui";
 
 import 'element-ui/lib/theme-chalk/index.css'
 import ImpPanel from "./components/panel.vue";
-import krGraph from "./components/kr-graph/index"
+import krGraph from "./components/kr-graph/indexNew"
+import krEmailDetail from "./components/kr-email-detail/index"
+
+import jzMultipleEdges from "./components/kr-graph/indexMultipleEdges"
+
 
 
 Vue.prototype.$http = axios
@@ -23,6 +27,10 @@ Vue.use(Element);
 
 Vue.component(ImpPanel.name, ImpPanel);
 Vue.component("krGraph", krGraph);
+Vue.component("krEmailDetail", krEmailDetail);
+
+Vue.component("jzMultipleEdges", jzMultipleEdges);
+
 
 Vue.use(VueProgressBar, {
     color: '#eeeeee',

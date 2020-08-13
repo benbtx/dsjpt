@@ -5,11 +5,6 @@
       <h3 class="box-title" slot="header" style="width: 100%;">
         <el-row style="width: 100%;">
           <el-col :span="7" :offset="0">
-            <!-- <div class="el-input" style=" float: right;">
-              姓名：
-              <input type="text" placeholder="输入用户名称" v-model="searchKey" @keyup.enter="search($event)"
-                    class="el-input__inner" style="width:150px">
-            </div> -->
             <div class="el-input" style=" float: left;">
                 案件
                
@@ -37,35 +32,6 @@
             
           </el-col>
 
-          <!-- <el-col :span="6">
-              <div class="el-input" style=" float: left;">
-             
-                人员选择：
-                <el-select  size='80' multiple  collapse-tags  v-model="ryxx" placeholder="请选择">
-                    <el-option
-                      v-for="item in database"
-                      :key="item.value"
-                      :label="item.label"
-                      :value="item.value">
-                    </el-option>
-                  </el-select>
-                
-              </div>
-
-          </el-col>
-
-          <el-col :span="4">
-              <div class="el-input" style=" float: left; ">
-                交易次数：
-                <el-input style='width:50px' v-model="jycsks" placeholder="0"></el-input>-
-                <el-input style='width:50px' v-model="jycsjs" placeholder="1000"></el-input>
-                
-              </div>
-
-          </el-col> -->
-
-
-
           <el-col :span="8">
          
               <el-button type="primary" icon="plus" @click="btnGetGLD">关联点</el-button>
@@ -78,8 +44,13 @@
     <div slot="body">
        
           <el-card class="box-card">
-            
-             <div id="chart"></div>
+            <kr-graph
+              ref="graph"
+              :graphData="graphData"
+              :maxClickNum="0"
+              :tipNodeLine="tipNodeLine"
+              v-loading="graphLoading"
+            ></kr-graph>
            </el-card >
 
 
@@ -104,13 +75,11 @@
 
 <script>
   import panel from "../../../components/panel.vue";
-  import * as api from "../../../api";
-  import testData from "../../../../static/data/data.json";
-  import * as sysApi from '../../../services/sys';
   import echarts from 'echarts';
   import macarons from 'echarts/theme/dark';
   import http_da from "../../../common/http_da";
   import http_tjs from "../../../common/http_tjs"
+  import {cloneDeep} from "lodash"
 
   
 
@@ -177,6 +146,28 @@
     components: {
       'imp-panel': panel
     },
+    computed: {
+      graphData() {
+        var accountList=this.gxtData.persons,relateList=[]
+        this.gxtData.lists.map(value=>{
+          relateList.push({
+            source:value.startPerson.id,
+            target:value.endPerson.id,
+            label:value.value0
+          })
+        })
+        return {
+          accountList,
+          relateList
+        }
+      },
+      tipNodeLine(){
+        return{
+          accountList:this.gxtXRJD,
+          relateList:[],
+        }
+      }
+    },
     data(){
       return {
         chart: null,
@@ -184,6 +175,7 @@
         archiveNum: [],
         list: [],
         loading: false,
+        graphLoading: false,
 
         nr:'',
   
@@ -365,261 +357,51 @@
       },
       //根据案件查图信息
       getTXX(){
-          
+          this.graphLoading=true;
           return http_tjs
           .getDACTXX({archiveNum:this.archiveNum})
           .then(res => res)
           .then(data => {
+            this.graphLoading=false;
               if(data.data.code==200)
               {
-                // this.$message('操作成功');
-                this.graphVo=data.data.data;
+                this.graphVo=cloneDeep(data.data.data);
                 this.gxtData=data.data.data;
-                //更新人员信息
-                this.database=[];
-                for (const item of this.gxtData.persons) {
-                   this.database.push({
-                    value: item.idCard,
-                    label: item.name
-                  });
-                }
-
-                this.drawchart('chart');
-                var that = this;
-                var resizeTimer = null;
-                window.onresize = function () {
-                  if (resizeTimer) clearTimeout(resizeTimer);
-                  resizeTimer = setTimeout(function () {
-                    // that.drawchart('chart');
-                      that.chart.resize();
-                    
-                  }, 1000);
-                }
-
-
-
-              
-            
               }else{
                  this.$message(res.data.msg);
               }
-          }).catch(e => {  this.$message('接口操作失败');})
+          }).catch(e => { this.graphLoading=false;this.$message('接口操作失败');})
 
 
       },
-      
 
-      drawchart(id) {
-        var _this=this;
-        let o = document.getElementById(id);
-        if(o==null){
-          return;
-        }
-        let height = document.documentElement.clientHeight;
-        height -= 120;
-        o.style.height= height+"px";
-        this.chart = echarts.init(o,'macarons');
-        // this.chart = echarts.init(o);
-
-
-        //重新构造option
-        let nodes=[];
-        for (const item of this.gxtData.persons) {
-          nodes.push({
-                name: item.name,
-                // symbolSize:50,
-                // itemStyle:{color :'black'},//10a050   3ff7d18   006acc
-                label:{color :'white'},//10a050   3ff7d18   006acc
-                symbolSize: 120,//圆饼大小 节点大小
-                itemStyle: {
-                    color: '#409EFF', //#409EFF blue 节点的背景色
-                },
-                data:item,
-          });
-          // var node={
-          //       name: item.name,
-          //       // symbolSize:50,
-          //       // itemStyle:{color :'black'},//10a050   3ff7d18   006acc
-          //       label:{color :'white'},//10a050   3ff7d18   006acc
-          //       symbolSize: 80,
-          //       itemStyle: {
-          //           color: '#409EFF', //#409EFF blue 节点的背景色
-          //       },
-          //       data:item,
-          // };
-          // for (const i of  this.gxtXRJD) {
-          //    if(item.idCard==i.idCard){
-          //      node.itemStyle.color='red'
-          //    }
-          // }
-          //  nodes.push(node);
-
-        }
-       
-        let links=[];
-        for (const item of this.gxtData.lists) {
-          links.push({
-                source: item.startPerson.name,
-                target: item.endPerson.name,
-                value: item.value0,
-                lineStyle:{
-                    color: '#736d6d',  //#409EFF blue 连线的颜色
-                    width:2,
-                    opacity:1,
-
-                },
-                 data:item,
-            });
-        }
-        
-
-        option.series[0].data=nodes;
-        option.series[0].links=links;
-
-        this.chart.setOption(option);
-        this.chart.resize();
-       
-        this.chart.off('click');
-        this.chart.on('click', function (params) {
-           console.log(params);
-           console.log(params.data.data);
-         
-          // if(_this.twoWayMappingId.length>=1){
-          //   _this.$message('只能选择一个点');
-          //   return;
-          // }
-          // //去除重复选择的
-          // if(_this.twoWayMappingId.length==1){
-          //   if(_this.twoWayMappingId[0]==params.data.data.twoWayMappingId){
-          //      return;
-          //   }
-          // }
-          // _this.twoWayMappingId.push(params.data.data.twoWayMappingId);
-
-            //改变节点状态 ,当前单击选中高亮
-                  for (const item of option.series[0].data) {
-                     if(item.data.twoWayMappingId==params.data.data.twoWayMappingId){
-                        item.itemStyle.color='Blue'
-                      }
-                      // else{
-                      //   item.itemStyle.color='#409EFF'
-                      // }
-
-                  }
-                 
-
-                _this.chart.setOption(option);
-
-        });
-        //双击取消选择
-        this.chart.off('dblclick');
-        this.chart.on('dblclick', function (params) {
-           console.log(params);
-          //  alert(params.data.data.twoWayMappingId);
-          //  if(_this.twoWayMappingId.tos){}
-          if(_this.twoWayMappingId.toString().indexOf(params.data.data.twoWayMappingId)>-1){
-            //包含则取消
-            var gdarr=[];//过渡数组
-            for (const i of _this.twoWayMappingId) {
-                if(i!=params.data.data.twoWayMappingId){
-                  gdarr.push(i);
-
-                }else{
-                  //清除高亮
-                  //改变节点状态 ,当前单击选中高亮
-                  for (const item of option.series[0].data) {
-                     if(item.data.twoWayMappingId==i){
-                        item.itemStyle.color='#409EFF'//red
-                      }
-                      // else{
-                      //   item.itemStyle.color='#409EFF'
-                      // }
-
-                  }
-
-                  _this.chart.setOption(option);
-
-                }
-            }
-            _this.twoWayMappingId=gdarr;
-            
-          }else{
-            
-          }
-          
-
-        });
-
-
-      },
-      
       //关联点计算
       btnGetGLD(){
+        this.graphLoading=true;
         var _this=this;
            if(this.archiveNum==[]){ this.$message('请先查询选择案件'); return;}
-
-          // if(this.graphVo==null||this.twoWayMappingId1==0||this.twoWayMappingId2==0){ this.$message('请先选中两个节点'); return;}
-          // if(_this.twoWayMappingId.length!=1){
-          //   _this.$message('请选择一个点');
-          //   return;
-          // }
            http_tjs
-          // .getSDYX({graphVo:JSON.parse(JSON.stringify(this.graphVo)),twoWayMappingId:this.twoWayMappingId})
-          // .getSDYX({graphVo:JSON.stringify(JSON.parse(JSON.stringify(this.graphVo))),twoWayMappingId:this.twoWayMappingId})
-          // .getGLDJS({twoWayMappingId:this.twoWayMappingId[0]})
            .getGLDJS({graphVo:this.graphVo})
-          
-          .then(res => res)
           .then(data => {
+            this.graphLoading=false;
               if(data.data.code==200)
               {
-                //  // this.$message('操作成功');
-                _this.gxtXRJD=data.data.data; //当前查询到需要渲染的节点
-                // _this.gxtXRLX=data.data.data.lists; //当前查询到需要渲染的连线
-                //改变节点状态
-                  for (const item of option.series[0].data) {
-                    for (const i of  _this.gxtXRJD) {
-                      if(item.data.id==i){
-                        item.itemStyle.color='red'
-                      }
-                    }
+                _this.gxtXRJD=[]
+                this.gxtData.persons.map(value=>{
+                  if(data.data.data.findIndex(a=>a==value.id)!=-1){
+                    _this.gxtXRJD.push(value)
                   }
-                //   //改变连线状态
-                //   for (const item of option.series[0].links) {
-                //     for (const i of  _this.gxtXRLX) {
-                //       if(item.data.id==i.id){
-                //         item.lineStyle.color='red'
-                //       }
-                //     }
-                //   }
-                 
-                this.chart.setOption(option);
-              
-            
+                })
               }else{
                  this.$message(data.data.msg);
               }
-          }).catch(e => {  this.$message('接口操作失败');})
-
+          }).catch(e => {  this.graphLoading=false; this.$message('接口操作失败');})
 
       },
       
       //
       btnGetCZ(){
-
-        this.twoWayMappingId=[];
-         //改变节点状态
-        for (const item of option.series[0].data) {
-            item.itemStyle.color='#409EFF' 
-        }
-        //改变连线状态
-        for (const item of option.series[0].links) {
-           item.lineStyle.color='#409EFF'
-
-        }
-        
-        this.chart.setOption(option);
-
+        this.gxtXRJD=[]
       },
    
 

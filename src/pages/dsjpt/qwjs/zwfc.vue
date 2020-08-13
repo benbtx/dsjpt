@@ -29,7 +29,7 @@
         
         <el-button type="primary" style=" float: right;margin-right:50px;" icon="plus" class='btnFC' @click="ZWFC">分词</el-button>
 
-        <el-select style='margin-right:200px; float: right;' v-model="type" placeholder="请选择">
+        <el-select style='margin-right:20px; float: right;' v-model="type" placeholder="请选择">
           <el-option
             v-for="item in fccxoptions"
             :key="item.analyzer"
